@@ -1,0 +1,152 @@
+@import "tailwindcss";
+
+/*
+  揪練設計語彙：田徑跑道。
+  鈷藍跑道（主色）＋ 號碼布黃（提示「再揪一人」與重點），白底、淡藍灰頁面。
+  字體：粉圓（標題，親切）、思源黑體（內文）、Archivo 窄體（價格與數字，像計分板）。
+*/
+
+:root {
+  --bg: #eef2f7;
+  --surface: #ffffff;
+  --surface-2: #f5f7fb;
+  --ink: #13213a;
+  --ink-2: #4b5872;
+  --ink-3: #6f7b92;
+  --line: #d8dfea;
+  --track: #2347c8;
+  --track-strong: #17318f;
+  --track-ink: #ffffff;
+  --track-soft: #e2e8fb;
+  --lane: #ffd23f;
+  --lane-ink: #3a2e00;
+  --lane-soft: #fff4c7;
+  --go: #1b8f52;
+  --go-soft: #dcf2e5;
+  --warn: #b77f00;
+  --warn-soft: #fff0c2;
+  --stop: #cf342e;
+  --stop-soft: #fbe1df;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1524;
+    --surface: #161f33;
+    --surface-2: #1c2740;
+    --ink: #e8edf7;
+    --ink-2: #aab5ca;
+    --ink-3: #8390aa;
+    --line: #2a3654;
+    --track: #7290ff;
+    --track-strong: #9db1ff;
+    --track-ink: #0a1230;
+    --track-soft: #22305a;
+    --lane: #ffd23f;
+    --lane-ink: #2e2400;
+    --lane-soft: #3b3313;
+    --go: #46c784;
+    --go-soft: #153626;
+    --warn: #f2b630;
+    --warn-soft: #3a2e10;
+    --stop: #ff6d65;
+    --stop-soft: #3d1a1a;
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-track: var(--track);
+  --color-track-strong: var(--track-strong);
+  --color-track-ink: var(--track-ink);
+  --color-track-soft: var(--track-soft);
+  --color-lane: var(--lane);
+  --color-lane-ink: var(--lane-ink);
+  --color-lane-soft: var(--lane-soft);
+  --color-go: var(--go);
+  --color-go-soft: var(--go-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-stop: var(--stop);
+  --color-stop-soft: var(--stop-soft);
+
+  --font-display: "Huninn", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  --font-num: "Archivo", "Noto Sans TC", system-ui, sans-serif;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* 數字：窄體、等寬，像計分板 */
+.num {
+  font-family: var(--font-num);
+  font-stretch: 75%;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+:focus-visible {
+  outline: 3px solid var(--track);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* 跑道分道線：用在家族排行 */
+.lane-lines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--lane-h, 44px) - 1px),
+    color-mix(in oklab, var(--track) 22%, transparent) calc(var(--lane-h, 44px) - 1px),
+    color-mix(in oklab, var(--track) 22%, transparent) var(--lane-h, 44px)
+  );
+}
+
+@keyframes stamp-in {
+  0% { transform: scale(0.6); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.stamp-in {
+  animation: stamp-in 260ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* iOS 底部安全區 */
+.pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
