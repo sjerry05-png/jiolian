@@ -9,15 +9,16 @@ export function LoginForm({
   next,
   initialError,
   initialMode,
+  googleEnabled,
 }: {
   next: string | null;
   initialError: string | null;
   initialMode: "signin" | "signup";
+  googleEnabled: boolean;
 }) {
   const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmSent, setConfirmSent] = useState(false);
   const google = useAction();
   const form = useAction();
 
@@ -32,40 +33,27 @@ export function LoginForm({
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (mode === "signin") form.run(() => signInWithPassword(email, password, next));
-    else
-      form.run(
-        () => signUpWithPassword(email, password, next),
-        (r) => {
-          if (r === "confirm_email") setConfirmSent(true);
-        },
-      );
+    else form.run(() => signUpWithPassword(email, password, next));
   };
-
-  if (confirmSent) {
-    return (
-      <div className="rounded-2xl bg-surface p-5">
-        <p className="display text-xl">請到信箱收驗證信</p>
-        <p className="mt-2 text-ink-2">
-          我們寄了一封信到 <span className="font-medium text-ink">{email}</span>，點信裡的連結就完成註冊。
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
       <ErrorText>{google.error ?? (form.error ? null : initialError)}</ErrorText>
 
-      <Button variant="secondary" size="lg" className="w-full" onClick={onGoogle} disabled={google.pending}>
-        <GoogleG />
-        {google.pending ? "前往 Google…" : "用 Google 帳號繼續"}
-      </Button>
+      {googleEnabled && (
+        <>
+          <Button variant="secondary" size="lg" className="w-full" onClick={onGoogle} disabled={google.pending}>
+            <GoogleG />
+            {google.pending ? "前往 Google…" : "用 Google 帳號繼續"}
+          </Button>
 
-      <div className="flex items-center gap-3 text-sm text-ink-3">
-        <span className="h-px flex-1 bg-line" />
-        或用 Email
-        <span className="h-px flex-1 bg-line" />
-      </div>
+          <div className="flex items-center gap-3 text-sm text-ink-3">
+            <span className="h-px flex-1 bg-line" />
+            或用 Email
+            <span className="h-px flex-1 bg-line" />
+          </div>
+        </>
+      )}
 
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <div>

@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "@/lib/config";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/lib/types";
 
@@ -56,22 +57,48 @@ export async function signUpWithPassword(
   email: string,
   password: string,
   next: string | null,
-): Promise<ActionResult<"confirm_email">> {
+): Promise<ActionResult> {
   if (password.length < 8) return { ok: false, error: "密碼至少 8 個字元" };
-  const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: email.trim(),
-    password,
-    options: { emailRedirectTo: `${await origin()}/auth/callback?next=${encodeURIComponent(safeNext(next))}` },
-  });
-  if (error) {
-    if (error.code === "user_already_exists") return { ok: false, error: "這個 Email 已經註冊過了，請直接登入" };
-    if (error.code === "weak_password") return { ok: false, error: "密碼太簡單，請換一個" };
-    if (error.code === "over_email_send_rate_limit" || error.status === 500)
-      return { ok: false, error: "目前無法寄出驗證信，請改用 Google 登入，或稍後再試" };
-    return { ok: false, error: error.message };
+  if (password.length > 72) return { ok: false, error: "密碼最多 72 個字元" };
+
+  // 註冊走 Supabase Edge Function（jiolian-signup）：直接建立已驗證帳號，不用等驗證信。
+  // 這樣不必關掉整個 Supabase 專案的「Confirm email」，同專案的其他 App 不受影響。
+  const h = await headers();
+  const clientIp = (h.get("x-forwarded-for") ?? h.get("x-real-ip") ?? "").split(",")[0].trim();
+  let res: Response;
+  try {
+    res = await fetch(`${SUPABASE_URL}/functions/v1/jiolian-signup`, {
+      method: "POST",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: SUPABASE_PUBLISHABLE_KEY,
+        "x-client-ip": clientIp,
+      },
+      body: JSON.stringify({ email: email.trim(), password }),
+    });
+  } catch {
+    return { ok: false, error: "連線不穩，請稍後再試" };
   }
-  if (!data.session) return { ok: true, data: "confirm_email" };
+  if (!res.ok) {
+    const body = (await res.json().catch(() => ({}))) as { error?: string };
+    switch (body.error) {
+      case "user_already_exists":
+        return { ok: false, error: "這個 Email 已經註冊過了，請直接登入" };
+      case "invalid_email":
+        return { ok: false, error: "Email 格式不正確" };
+      case "weak_password":
+        return { ok: false, error: "密碼太簡單，請換一個" };
+      case "rate_limited":
+        return { ok: false, error: "註冊的人有點多，請過幾分鐘再試" };
+      default:
+        return { ok: false, error: "目前無法註冊，請稍後再試" };
+    }
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+  if (error) return { ok: false, error: "帳號已建立，請改用登入" };
   redirect(safeNext(next));
 }
 
