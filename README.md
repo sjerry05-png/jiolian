@@ -17,6 +17,15 @@
 - 作業：每週幾次的作業，可給全團或指定學員；回應學員打卡（表情＋一句話）
 - 學員頁：打卡日曆、身體數據（可代記）、上課與費用紀錄
 
+**中高齡（長輩）**
+- 體能小考：教練或學員自己測，項目同體育署 65 歲以上檢測（30 秒椅子坐立、30 秒手臂屈舉、2 分鐘原地抬膝、椅子坐姿體前彎、抓背、2.44 公尺起身繞物）＋握力、開眼單足立；每項附測法、計時器、生活意義
+- 測前安全檢查：7 題（參考 PAR-Q），任一題「是」要勾「已取得醫師同意」才能存；血壓超過 140/90 或心跳超過 100 會提醒，180/110 以上擋下
+- 成績單：跟第一次比的「明顯進步／持平／退步」、台灣同齡同性別排名（常模：Wang CW et al., Healthcare 2024;12(2):213，嘉義 3,332 位 55～95 歲長者）、握力低於 AWGS 2019 肌少症值會提醒
+- 生活目標：最多 5 件吃力的事，0～10 分、每 4 週重打；按「做到了」會出現在家族動態（可選不分享）
+- 每週身體感受：疼痛（0～10、部位）、睡眠、精神；教練看板列出疼痛 ≥ 6、比上次多 2 分以上、睡不好或沒精神的學員
+- 長輩模式：設定裡一鍵放大全站字體與按鈕
+- 隱私：年齡性別、小考、分數、身體感受只有本人與教練看得到；家人只看得到願意分享的「做到了」
+
 **學員**
 - 今天：當天作業一鍵打卡、選心情、可補打昨天；連續打卡天數；教練督促訊息
 - 課程：看到即時價格與「再揪 1 人每人降到多少」，可帶沒有帳號的家人一起報名
@@ -48,10 +57,13 @@
 | `20261014000004_jiolian_rpcs_deletes.sql` | 取消打卡、刪除身體數據（含 DELETE，獨立成一個檔） |
 | `20261018000005_jiolian_session_started.sql` | 課程總覽加上 `has_started` |
 | `20261023000006_jiolian_signup_gate.sql` | 註冊限流（全站每小時 60、同 IP 每小時 8） |
+| `20261024000007_jiolian_senior.sql` | 中高齡：長輩模式、基本資料、體能小考、生活目標、每週身體感受、教練身體警示（正式資料庫分 6 段套用） |
 
 Edge Function：`supabase/functions/jiolian-signup`（部署時 `verify_jwt = false`）。註冊時由伺服器呼叫，直接建立已驗證的 Email 帳號，不寄驗證信。
 
-規則測試：`supabase/tests/fit_rules_test.sql`（本機 Postgres 搭配 `supabase/tests/local_auth_stub.sql` 執行，75 項全部通過）。
+規則測試：`supabase/tests/fit_rules_test.sql`（75 項）與 `supabase/tests/fit_senior_test.sql`（49 項），本機 Postgres 搭配 `supabase/tests/local_auth_stub.sql` 執行，全部通過。
+
+注意：Supabase 連接器對含 `DELETE` 的 migration 會跳確認視窗，手機上可能看不到而被取消；新的刪除功能盡量用「隱藏」（`deleted_at`）。
 
 ## 登入設定
 
@@ -80,6 +92,8 @@ npm run dev
 
 ## 端對端測試
 
+- 中高齡流程（教練、阿嬤、女兒三個全新帳號：長輩模式、身體感受、生活目標、家族動態、兩次體能小考、同齡排名）：
+  `E2E_BASE_URL=https://jiolian.vercel.app E2E_PASSWORD=x npx playwright test e2e/y-senior.spec.ts`
 - 正式網站冒煙測試（全新帳號從註冊走到打卡，不需要示範帳號）：
   `E2E_BASE_URL=https://jiolian.vercel.app E2E_PASSWORD=x npx playwright test e2e/z-prod-smoke.spec.ts`
   測完用 SQL 清掉：`delete from auth.users where email like 'smoke-%@test.jiolian.app';`

@@ -304,7 +304,7 @@ export async function saveAssessment(input: AssessmentInput): Promise<ActionResu
 }
 
 export async function deleteAssessment(assessmentId: string) {
-  return run("fit_delete_assessment", { p_assessment_id: assessmentId });
+  return run("fit_hide_assessment", { p_assessment_id: assessmentId });
 }
 
 export async function addGoal(userId: string | null, title: string, score: number, share: boolean) {

@@ -4,6 +4,8 @@
 --   3. 體能小考：國民體適能（65 歲以上）同款項目＋握力＋開眼單足立，測前要做安全檢查
 --   4. 生活目標：自己挑 3～5 件吃力的事，每月 0～10 分重打一次；做到了會出現在家族動態
 --   5. 每週身體感受：疼痛 0～10、睡眠與精神 1～5
+-- 正式資料庫分 6 段套用（jiolian_senior_1_tables … jiolian_senior_6_hide_assessment），結果與本檔相同。
+-- 記錯的小考用「隱藏」（deleted_at）而不是真的刪除：Supabase 連接器對含 DELETE 的語法要另外確認，而且隱藏可以救回。
 
 alter table public.fit_profiles add column if not exists large_text boolean not null default false;
 
@@ -44,6 +46,8 @@ create table public.fit_assessments (
   note text check (note is null or char_length(note) <= 300),
   recorded_by uuid references public.fit_profiles (id) on delete set null,
   created_at timestamptz not null default now(),
+  deleted_at timestamptz,
+  deleted_by uuid references public.fit_profiles (id) on delete set null,
   constraint fit_assessments_has_value
     check (num_nonnulls(chair_stand, arm_curl, step_2min, sit_reach, back_scratch, up_and_go, grip, single_leg) > 0),
   constraint fit_assessments_screen_ok check (doctor_ok or not (true = any (screen_answers)))
@@ -106,7 +110,7 @@ create policy fit_body_info_read on public.fit_body_info
 
 create policy fit_assessments_read on public.fit_assessments
   for select to authenticated
-  using (user_id = (select auth.uid()) or fit_internal.coaches_user(user_id));
+  using (deleted_at is null and (user_id = (select auth.uid()) or fit_internal.coaches_user(user_id)));
 
 -- 家人只看得到「已達成、願意分享」的生活目標（家族動態用），分數只有本人與教練看得到
 create policy fit_goals_read on public.fit_goals
@@ -248,20 +252,22 @@ begin
 end;
 $$;
 
-create or replace function public.fit_delete_assessment(p_assessment_id uuid)
+-- 記錯的小考：隱藏起來（本人或教練）。資料還在，需要時可以用 SQL 把 deleted_at 清掉救回。
+create or replace function public.fit_hide_assessment(p_assessment_id uuid)
 returns void
 language plpgsql security definer
 set search_path = ''
 as $$
 declare
   v_user uuid;
+  v_uid uuid;
 begin
-  select user_id into v_user from public.fit_assessments where id = p_assessment_id;
+  select user_id into v_user from public.fit_assessments where id = p_assessment_id and deleted_at is null;
   if v_user is null then
     raise exception '找不到這次小考';
   end if;
-  perform fit_internal.require_self_or_coach(v_user);
-  delete from public.fit_assessments where id = p_assessment_id;
+  v_uid := fit_internal.require_self_or_coach(v_user);
+  update public.fit_assessments set deleted_at = now(), deleted_by = v_uid where id = p_assessment_id;
 end;
 $$;
 
@@ -465,7 +471,7 @@ revoke all on function
   public.fit_set_large_text(boolean),
   public.fit_set_body_info(uuid, integer, text),
   public.fit_save_assessment(uuid, date, boolean[], boolean, integer, integer, integer, numeric, numeric, numeric, numeric, numeric, integer, integer, integer, text),
-  public.fit_delete_assessment(uuid),
+  public.fit_hide_assessment(uuid),
   public.fit_add_goal(uuid, text, integer, boolean),
   public.fit_rate_goal(uuid, integer),
   public.fit_set_goal_achieved(uuid, boolean),
@@ -479,7 +485,7 @@ grant execute on function
   public.fit_set_large_text(boolean),
   public.fit_set_body_info(uuid, integer, text),
   public.fit_save_assessment(uuid, date, boolean[], boolean, integer, integer, integer, numeric, numeric, numeric, numeric, numeric, integer, integer, integer, text),
-  public.fit_delete_assessment(uuid),
+  public.fit_hide_assessment(uuid),
   public.fit_add_goal(uuid, text, integer, boolean),
   public.fit_rate_goal(uuid, integer),
   public.fit_set_goal_achieved(uuid, boolean),

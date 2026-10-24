@@ -113,7 +113,7 @@ reset role;
 select set_config('request.jwt.claims', json_build_object('sub', :'B')::text, true);
 set local role authenticated;
 select fit_test.ok((select count(*) from fit_assessments where user_id = :'A') = 0, '家人看不到奶奶的小考');
-select fit_test.ok(fit_test.err(format('select fit_delete_assessment(%L)', :'as3')) = '只能幫自己的學員記錄', '家人不能刪奶奶的小考');
+select fit_test.ok(fit_test.err(format('select fit_hide_assessment(%L)', :'as3')) = '只能幫自己的學員記錄', '家人不能隱藏奶奶的小考');
 reset role;
 
 select set_config('request.jwt.claims', json_build_object('sub', :'O')::text, true);
@@ -123,8 +123,9 @@ reset role;
 
 select set_config('request.jwt.claims', json_build_object('sub', :'C')::text, true);
 set local role authenticated;
-select fit_delete_assessment(:'as3');
-select fit_test.ok((select count(*) from fit_assessments where user_id = :'A') = 2, '教練可以刪掉記錯的小考');
+select fit_hide_assessment(:'as3');
+select fit_test.ok((select count(*) from fit_assessments where user_id = :'A') = 2, '教練可以隱藏記錯的小考');
+select fit_test.ok(fit_test.err(format('select fit_hide_assessment(%L)', :'as3')) = '找不到這次小考', '已隱藏的不能再隱藏');
 reset role;
 
 -- ── 生活目標 ──

@@ -89,6 +89,68 @@ export default async function Landing() {
             ))}
           </div>
         </section>
+
+        <section className="bg-surface">
+          <div className="mx-auto grid max-w-5xl gap-10 px-5 py-16 md:grid-cols-2 md:items-center">
+            <div className="md:order-2">
+              <h2 className="display text-3xl text-ink">帶爸媽一起練，進步看得見</h2>
+              <p className="mt-3 max-w-[32em] text-ink-2">
+                長輩練的不是肌肉線條，是站得起來、走得穩、提得動。揪練把這些變成看得到的數字，讓長輩和家人都感覺到「真的有在變好」。
+              </p>
+              <ul className="mt-6 space-y-4">
+                {[
+                  {
+                    t: "每月體能小考",
+                    d: "跟體育署 65 歲以上檢測同樣的項目，教練帶著測約 15 分鐘。和第一次比、也和台灣同齡長者比，測前先做安全檢查。",
+                  },
+                  {
+                    t: "生活目標",
+                    d: "自己挑幾件現在覺得吃力的事，像是不扶扶手爬到 3 樓、蹲下撿東西。做到那天，家人會在家族動態幫忙歡呼。",
+                  },
+                  {
+                    t: "每週身體感受",
+                    d: "疼痛、睡眠、精神，10 秒填完。哪裡痛變多了，教練上課前就會知道。設定裡還有長輩模式，字和按鈕都放大。",
+                  },
+                ].map((f) => (
+                  <li key={f.t} className="border-l-4 border-lane pl-4">
+                    <p className="display text-lg text-ink">{f.t}</p>
+                    <p className="mt-1 text-[0.9375rem] text-ink-2">{f.d}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="space-y-3 md:order-1" aria-label="長輩成績單示意">
+              <div className="rounded-3xl bg-go-soft p-5">
+                <p className="text-sm text-go">跟第一次比，第 2 次小考</p>
+                <p className="display mt-1 text-2xl text-ink">
+                  有 <span className="num text-go">4</span> 項明顯進步
+                </p>
+              </div>
+              {[
+                { name: "30 秒椅子坐立", short: "腿力", v: "13", unit: "次", delta: "多 3 次", life: "從沙發、馬桶站起來不用扶" },
+                { name: "開眼單足立", short: "靜態平衡", v: "15", unit: "秒", delta: "多站 7 秒", life: "站著穿褲子、上下公車" },
+              ].map((t) => (
+                <div key={t.name} className="rounded-3xl bg-bg p-5">
+                  <p className="text-sm text-ink-3">{t.name}</p>
+                  <p className="display text-lg text-ink">{t.short}</p>
+                  <p className="mt-1 text-ink">
+                    <span className="num text-4xl font-bold">{t.v}</span> <span className="text-ink-2">{t.unit}</span>
+                  </p>
+                  <p className="mt-1 font-medium text-go">↗ {t.delta}・明顯進步</p>
+                  <p className="mt-1 text-sm text-ink-2">👉 {t.life}</p>
+                </div>
+              ))}
+              <div className="flex items-center gap-3 rounded-3xl bg-lane-soft px-5 py-4">
+                <span className="text-2xl" aria-hidden>
+                  🎉
+                </span>
+                <p className="text-ink">
+                  <span className="font-medium">阿嬤</span> 做到了「蹲下撿東西不用扶」
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-line">
