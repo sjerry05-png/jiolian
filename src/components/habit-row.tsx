@@ -67,7 +67,7 @@ export function HabitRow({ habit, showGroup, canBackfill }: { habit: TodayHabit;
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-baseline gap-x-2">
-          <p className={`text-[17px] font-medium ${done ? "text-ink" : "text-ink"}`}>{habit.title}</p>
+          <p className={`text-[1.0625rem] font-medium ${done ? "text-ink" : "text-ink"}`}>{habit.title}</p>
           {habit.is_personal ? <span className="text-xs text-track">只給你</span> : null}
         </div>
         {habit.detail ? <p className="mt-0.5 text-sm text-ink-2">{habit.detail}</p> : null}

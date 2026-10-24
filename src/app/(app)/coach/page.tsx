@@ -4,9 +4,9 @@ import { progressReason, SessionRow } from "@/components/coach-bits";
 import { QuickMessage } from "@/components/quick-message";
 import { Avatar, ButtonLink, Empty, SectionTitle, StatusDot } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
-import { money, todayInTaipei } from "@/lib/format";
-import { coachGroups, unsettledSessions, upcomingSessions } from "@/lib/queries";
-import type { CoachStats, MemberProgress } from "@/lib/types";
+import { isoDaysAgo, money, todayInTaipei } from "@/lib/format";
+import { coachGroups, profilesByIds, unsettledSessions, upcomingSessions } from "@/lib/queries";
+import type { BodyAlert, CoachStats, Goal, MemberProgress } from "@/lib/types";
 
 export const metadata: Metadata = { title: "看板" };
 
@@ -35,13 +35,28 @@ export default async function CoachDashboard() {
   const ids = groups.map((g) => g.id);
   const today = todayInTaipei();
   const monthStart = `${today.slice(0, 7)}-01`;
-  const [statsRes, upcoming, unsettled, ...progressRes] = await Promise.all([
+  const since14 = isoDaysAgo(14);
+  const [statsRes, alertsRes, winsRes, upcoming, unsettled, ...progressRes] = await Promise.all([
     supabase.rpc("fit_coach_stats", { p_from: monthStart, p_to: today }),
+    supabase.rpc("fit_coach_body_alerts"),
+    supabase
+      .from("fit_goals")
+      .select("id, user_id, title, share_with_group, created_by, achieved_at, archived_at, created_at")
+      .gte("achieved_at", since14)
+      .is("archived_at", null)
+      .order("achieved_at", { ascending: false })
+      .limit(10),
     upcomingSessions(supabase, ids, { untilDays: 7 }),
     unsettledSessions(supabase, ids),
     ...groups.map((g) => supabase.rpc("fit_group_progress", { p_group_id: g.id })),
   ]);
   const stats = statsRes.data as CoachStats | null;
+  const alerts = (alertsRes.data ?? []) as BodyAlert[];
+  const wins = ((winsRes.data ?? []) as Goal[]).filter((g) => g.user_id !== user.id);
+  const winners = await profilesByIds(
+    supabase,
+    wins.map((g) => g.user_id),
+  );
   const groupName = new Map(groups.map((g) => [g.id, g.name]));
   const attention = groups.flatMap((g, i) =>
     ((progressRes[i].data ?? []) as MemberProgress[])
@@ -97,6 +112,63 @@ export default async function CoachDashboard() {
           </div>
         </div>
       </section>
+
+      {alerts.length > 0 ? (
+        <section>
+          <SectionTitle>身體狀況要注意</SectionTitle>
+          <ul className="divide-y divide-line rounded-2xl bg-surface">
+            {alerts.map((a) => (
+              <li key={a.user_id}>
+                <Link href={`/coach/students/${a.user_id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-surface-2">
+                  <Avatar name={a.display_name} id={a.user_id} size={34} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium text-ink">{a.display_name}</span>
+                    <span className="block text-sm text-ink-2">
+                      疼痛 {a.pain} 分{a.pain_area ? `（${a.pain_area}）` : ""}
+                      {a.prev_pain != null && a.pain - a.prev_pain >= 2 ? `，比上次多 ${a.pain - a.prev_pain} 分` : ""}
+                      {a.sleep <= 2 ? "・睡不好" : ""}
+                      {a.energy <= 2 ? "・沒精神" : ""}
+                    </span>
+                  </span>
+                  <span className={`num shrink-0 rounded-full px-2.5 py-0.5 text-lg font-bold ${a.pain >= 7 ? "bg-stop-soft text-stop" : "bg-warn-soft text-warn"}`}>
+                    {a.pain}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-sm text-ink-3">學員每週回報的感受。上課前先關心一下，必要時降低強度或建議就醫。</p>
+        </section>
+      ) : null}
+
+      {wins.length > 0 ? (
+        <section>
+          <SectionTitle>最近的好消息</SectionTitle>
+          <ul className="space-y-2">
+            {wins.map((g) => (
+              <li key={g.id} className="flex items-center gap-3 rounded-2xl bg-lane-soft px-4 py-3">
+                <span className="text-2xl" aria-hidden>
+                  🎉
+                </span>
+                <Link href={`/coach/students/${g.user_id}#goals`} className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-ink">
+                    {winners.get(g.user_id)?.display_name ?? "學員"} 做到了「{g.title}」
+                  </span>
+                  <span className="block text-sm text-ink-2">生活目標達成，記得在課堂上大聲稱讚</span>
+                </Link>
+                <QuickMessage
+                  kind="cheer"
+                  label="恭喜"
+                  recipientId={g.user_id}
+                  recipientName={winners.get(g.user_id)?.display_name ?? ""}
+                  groupId={null}
+                  presets={[`恭喜做到「${g.title}」！你的努力我都看到了 👏`, "太厲害了！下一個目標我們一起來 💪"]}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       <section>
         <SectionTitle>需要你關心</SectionTitle>

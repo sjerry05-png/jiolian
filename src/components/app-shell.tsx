@@ -65,7 +65,7 @@ export function AppShell({
                 key={item.href}
                 href={item.href}
                 aria-current={isActive(item) ? "page" : undefined}
-                className={`relative rounded-lg px-3 py-1.5 text-[15px] ${
+                className={`relative rounded-lg px-3 py-1.5 text-[0.9375rem] ${
                   isActive(item) ? "bg-track-soft font-medium text-track" : "text-ink-2 hover:text-ink"
                 }`}
               >
@@ -95,7 +95,7 @@ export function AppShell({
                 <Link
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={`relative flex h-16 flex-col items-center justify-center gap-0.5 text-[12px] ${
+                  className={`relative flex h-16 flex-col items-center justify-center gap-0.5 text-[0.75rem] ${
                     active ? "font-medium text-track" : "text-ink-3"
                   }`}
                 >
@@ -116,7 +116,7 @@ export function AppShell({
 
 function UnreadBadge({ n }: { n: number }) {
   return (
-    <span className="num absolute -top-1.5 -right-2.5 min-w-[18px] rounded-full bg-stop px-1 text-center text-[11px] leading-[18px] font-bold text-white">
+    <span className="num absolute -top-1.5 -right-2.5 min-w-[1.125rem] rounded-full bg-stop px-1 text-center text-[0.6875rem] leading-[1.125rem] font-bold text-white">
       {n > 9 ? "9+" : n}
       <span className="sr-only"> 則未讀</span>
     </span>

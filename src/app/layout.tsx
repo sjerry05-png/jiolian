@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { cookies } from "next/headers";
+import { SIZE_COOKIE } from "@/lib/config";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,9 +21,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // 長輩模式：字級放大要在伺服器渲染時就決定，避免畫面先小後大
+  const large = (await cookies()).get(SIZE_COOKIE)?.value === "lg";
   return (
-    <html lang="zh-Hant-TW" className="h-full antialiased">
+    <html lang="zh-Hant-TW" className="h-full antialiased" data-size={large ? "lg" : undefined}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />

@@ -22,7 +22,7 @@ export default async function Landing() {
       <main>
         <section className="mx-auto grid max-w-5xl items-center gap-10 px-5 pt-8 pb-16 md:grid-cols-[1.05fr_1fr] md:pt-16">
           <div>
-            <h1 className="display text-[44px] leading-[1.15] text-ink sm:text-6xl">
+            <h1 className="display text-[2.75rem] leading-[1.15] text-ink sm:text-6xl">
               揪越多人，
               <br />
               每人越便宜。
@@ -55,7 +55,7 @@ export default async function Landing() {
                 <li key={s.t} className="relative border-t-4 border-track pt-4">
                   <span className="num text-sm font-bold text-track">第 {i + 1} 步</span>
                   <p className="display mt-1 text-xl text-ink">{s.t}</p>
-                  <p className="mt-1.5 text-[15px] text-ink-2">{s.d}</p>
+                  <p className="mt-1.5 text-[0.9375rem] text-ink-2">{s.d}</p>
                 </li>
               ))}
             </ol>

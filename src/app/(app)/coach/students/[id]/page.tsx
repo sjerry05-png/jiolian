@@ -1,14 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ClipboardList } from "lucide-react";
 import { CheckinCalendar } from "@/components/checkin-calendar";
 import { progressReason } from "@/components/coach-bits";
+import { BodyInfoForm } from "@/components/fitness-bits";
+import { FitnessReport } from "@/components/fitness-report";
+import { GoalsPanel } from "@/components/goals-panel";
+import { WellbeingTrend } from "@/components/wellbeing-trend";
 import { MetricsPanel } from "@/components/metrics-panel";
 import { QuickMessage } from "@/components/quick-message";
-import { Avatar, ButtonLink, Panel, SectionTitle, StatusDot } from "@/components/ui";
+import { Avatar, ButtonLink, Empty, Panel, SectionTitle, StatusDot } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { BOOKING_LABEL, dateTimeLabel, feelingEmoji, money, PAID_LABEL, plainDateLabel, taipeiDateDaysAgo, todayInTaipei } from "@/lib/format";
-import { coachGroups } from "@/lib/queries";
+import { coachGroups, mondayOf, seniorData } from "@/lib/queries";
 import type { Booking, Checkin, Habit, MemberProgress, Metric, Profile } from "@/lib/types";
 import { ReactButtons } from "./react-buttons";
 
@@ -16,12 +21,14 @@ export const metadata: Metadata = { title: "學員" };
 
 export default async function CoachStudentPage(props: PageProps<"/coach/students/[id]">) {
   const { id } = await props.params;
+  const sp = await props.searchParams;
+  const assessedId = typeof sp.assessed === "string" ? sp.assessed : null;
   if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const { supabase, user } = await requireProfile("coach");
 
   const { data: student } = await supabase
     .from("fit_profiles")
-    .select("id, display_name, role, phone, bio")
+    .select("id, display_name, role, phone, bio, large_text")
     .eq("id", id)
     .maybeSingle<Profile>();
   if (!student || student.role !== "student") notFound();
@@ -41,7 +48,8 @@ export default async function CoachStudentPage(props: PageProps<"/coach/students
   const sharedIds = shared.map((g) => g.id);
 
   const since = taipeiDateDaysAgo(80);
-  const [progressList, checkinsRes, habitsRes, metricsRes, bookingsRes] = await Promise.all([
+  const [senior, progressList, checkinsRes, habitsRes, metricsRes, bookingsRes] = await Promise.all([
+    seniorData(supabase, id),
     Promise.all(shared.map((g) => supabase.rpc("fit_group_progress", { p_group_id: g.id }))),
     supabase
       .from("fit_checkins")
@@ -84,6 +92,12 @@ export default async function CoachStudentPage(props: PageProps<"/coach/students
     : { data: [] as { id: string; starts_at: string; group_id: string }[] };
   const sessionsById = new Map((sessionRows ?? []).map((s) => [s.id as string, s]));
   const unpaid = charged.filter((b) => !b.paid_at).reduce((s, b) => s + (b.amount_due ?? 0), 0);
+  const today = todayInTaipei();
+  const thisWeek = senior.wellbeing.find((w) => w.week_start === mondayOf(today)) ?? null;
+  const names = new Map([
+    [user.id, "你"],
+    [student.id, student.display_name],
+  ]);
 
   return (
     <div className="space-y-6">
@@ -127,9 +141,67 @@ export default async function CoachStudentPage(props: PageProps<"/coach/students
         </Panel>
       ))}
 
+      <section>
+        <SectionTitle>身體感受</SectionTitle>
+        {thisWeek && (thisWeek.pain >= 6 || thisWeek.sleep <= 2 || thisWeek.energy <= 2) ? (
+          <p className="mb-3 rounded-2xl bg-stop-soft px-4 py-3 text-stop">
+            這週回報：疼痛 {thisWeek.pain} 分{thisWeek.pain_area ? `（${thisWeek.pain_area}）` : ""}
+            {thisWeek.sleep <= 2 ? "、睡不好" : ""}
+            {thisWeek.energy <= 2 ? "、沒精神" : ""}。上課前先問問狀況，調整強度。
+          </p>
+        ) : null}
+        <Panel>
+          <WellbeingTrend weeks={senior.wellbeing} emptyText="學員還沒填過每週身體感受（在學員的「今天」頁面填）。" />
+        </Panel>
+      </section>
+
+      <section id="fitness" className="scroll-mt-20">
+        <SectionTitle
+          action={
+            <ButtonLink href={`/coach/students/${student.id}/assess`} size="sm">
+              <ClipboardList className="size-4" aria-hidden />
+              {senior.assessments.length ? "再測一次" : "開始體能小考"}
+            </ButtonLink>
+          }
+        >
+          體能小考
+        </SectionTitle>
+        {assessedId ? <p className="mb-3 rounded-2xl bg-go-soft px-4 py-3 text-go">小考存好了，下面是跟之前的比較。</p> : null}
+        {senior.assessments.length === 0 ? (
+          <Empty title="還沒做過體能小考">
+            第一堂課先測一次當起點：椅子坐立、手臂屈舉、抬膝、柔軟度、起身繞物、握力、單足立，有器材的測就好，約 15 分鐘。
+          </Empty>
+        ) : (
+          <FitnessReport
+            assessments={senior.assessments}
+            body={senior.body}
+            today={today}
+            highlightId={assessedId}
+            names={names}
+            canDelete
+          />
+        )}
+        <details className="mt-3 rounded-2xl bg-surface px-4 py-3">
+          <summary className="cursor-pointer text-[0.9375rem] text-track">
+            出生年與性別{senior.body?.birth_year ? `（${senior.body.birth_year} 年・${senior.body.sex === "male" ? "男" : senior.body.sex === "female" ? "女" : "未填性別"}）` : "（還沒填）"}
+          </summary>
+          <div className="mt-3">
+            <BodyInfoForm userId={student.id} birthYear={senior.body?.birth_year ?? null} sex={senior.body?.sex ?? null} compact />
+          </div>
+        </details>
+      </section>
+
+      <section id="goals" className="scroll-mt-20">
+        <SectionTitle>生活目標</SectionTitle>
+        <p className="-mt-1 mb-3 text-sm text-ink-2">
+          跟{student.display_name}一起挑 3～5 件現在覺得吃力的事，每個月重打一次分數，做到了全家都看得到。
+        </p>
+        <GoalsPanel goals={senior.goals} ratings={senior.ratings} userId={student.id} today={today} isSelf={false} />
+      </section>
+
       <Panel>
         <SectionTitle>打卡日曆</SectionTitle>
-        <CheckinCalendar counts={counts} today={todayInTaipei()} />
+        <CheckinCalendar counts={counts} today={today} />
       </Panel>
 
       <section>

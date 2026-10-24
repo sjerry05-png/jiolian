@@ -8,3 +8,6 @@ export const SUPABASE_PUBLISHABLE_KEY =
 
 export const APP_NAME = "揪練";
 export const TIME_ZONE = "Asia/Taipei";
+
+/** 長輩模式（大字）的 cookie：根版面在伺服器端就要知道字級 */
+export const SIZE_COOKIE = "jl_size";

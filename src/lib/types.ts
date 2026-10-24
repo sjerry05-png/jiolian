@@ -14,6 +14,7 @@ export interface Profile {
   role: Role;
   phone: string | null;
   bio: string | null;
+  large_text: boolean;
 }
 
 export interface Group {
@@ -182,6 +183,78 @@ export interface GroupPreview {
   default_location: string | null;
   is_archived: boolean;
   is_member: boolean;
+}
+
+// ── 中高齡功能 ──
+
+export interface BodyInfo {
+  user_id: string;
+  birth_year: number | null;
+  sex: "male" | "female" | null;
+}
+
+export interface Assessment {
+  id: string;
+  user_id: string;
+  measured_on: string;
+  chair_stand: number | null;
+  arm_curl: number | null;
+  step_2min: number | null;
+  sit_reach: number | null;
+  back_scratch: number | null;
+  up_and_go: number | null;
+  grip: number | null;
+  single_leg: number | null;
+  bp_sys: number | null;
+  bp_dia: number | null;
+  hr_rest: number | null;
+  screen_answers: boolean[];
+  doctor_ok: boolean;
+  note: string | null;
+  recorded_by: string | null;
+  created_at: string;
+}
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  title: string;
+  share_with_group: boolean;
+  created_by: string | null;
+  achieved_at: string | null;
+  archived_at: string | null;
+  created_at: string;
+}
+
+export interface GoalRating {
+  goal_id: string;
+  user_id: string;
+  rated_on: string;
+  score: number;
+  rated_by: string | null;
+  created_at: string;
+}
+
+export interface Wellbeing {
+  user_id: string;
+  week_start: string;
+  pain: number;
+  pain_area: string | null;
+  sleep: number;
+  energy: number;
+  note: string | null;
+  updated_at: string;
+}
+
+export interface BodyAlert {
+  user_id: string;
+  display_name: string;
+  week_start: string;
+  pain: number;
+  prev_pain: number | null;
+  pain_area: string | null;
+  sleep: number;
+  energy: number;
 }
 
 export type ActionResult<T = undefined> = { ok: true; data: T } | { ok: false; error: string };

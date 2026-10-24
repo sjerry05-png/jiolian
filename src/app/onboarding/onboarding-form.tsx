@@ -24,6 +24,7 @@ export function OnboardingForm({
 }) {
   const [name, setName] = useState(suggestedName);
   const [role, setRole] = useState<Role | null>(lockedRole ?? initialRole);
+  const [large, setLarge] = useState(false);
   const { pending, error, run } = useAction();
 
   return (
@@ -31,7 +32,7 @@ export function OnboardingForm({
       className="space-y-6"
       onSubmit={(e) => {
         e.preventDefault();
-        if (role) run(() => setupProfile(name, role, next));
+        if (role) run(() => setupProfile(name, role, next, role === "student" && large));
       }}
     >
       <div>
@@ -79,6 +80,25 @@ export function OnboardingForm({
           </div>
         </fieldset>
       )}
+
+      {role === "student" ? (
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl bg-surface p-4">
+          <input
+            type="checkbox"
+            checked={large}
+            onChange={(e) => {
+              setLarge(e.target.checked);
+              if (e.target.checked) document.documentElement.dataset.size = "lg";
+              else delete document.documentElement.dataset.size;
+            }}
+            className="mt-1 size-5 accent-[var(--track)]"
+          />
+          <span>
+            <span className="block font-medium text-ink">字大一點（長輩模式）</span>
+            <span className="block text-sm text-ink-2">字和按鈕都放大，之後也可以在「設定」改。</span>
+          </span>
+        </label>
+      ) : null}
 
       <ErrorText>{error}</ErrorText>
       <Button type="submit" size="lg" className="w-full" disabled={pending || !role || !name.trim()}>

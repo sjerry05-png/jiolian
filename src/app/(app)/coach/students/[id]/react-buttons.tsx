@@ -55,7 +55,7 @@ export function ReactButtons({
             onChange={(e) => setText(e.target.value)}
             placeholder="例如：動作很標準！"
             aria-label="給學員的一句話"
-            className="h-10 min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 text-[16px] focus:border-track focus:outline-none"
+            className="h-10 min-w-0 flex-1 rounded-lg border border-line bg-surface px-3 text-[1rem] focus:border-track focus:outline-none"
           />
           <button type="submit" disabled={pending} className="h-10 rounded-lg bg-track px-3 text-sm font-medium text-track-ink">
             送出

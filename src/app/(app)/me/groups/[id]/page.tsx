@@ -8,7 +8,7 @@ import { Avatar, ButtonLink, Panel, SectionTitle } from "@/components/ui";
 import { requireProfile } from "@/lib/auth";
 import { feelingEmoji, LOCATION_LABEL, money, relativeLabel } from "@/lib/format";
 import { getGroup, profilesByIds } from "@/lib/queries";
-import type { Checkin, Habit, MemberProgress } from "@/lib/types";
+import type { Checkin, Goal, Habit, MemberProgress } from "@/lib/types";
 import { LeaveGroupButton } from "./leave-button";
 
 export const metadata: Metadata = { title: "小團" };
@@ -30,9 +30,31 @@ export default async function StudentGroupPage(props: PageProps<"/me/groups/[id]
     supabase.from("fit_habits").select("id, title, member_id, days_per_week").eq("group_id", id),
   ]);
   const progress = (progressRes.data ?? []) as MemberProgress[];
-  const feed = (feedRes.data ?? []) as Checkin[];
+  const checkinFeed = (feedRes.data ?? []) as Checkin[];
+  // 家人「做到了」的生活目標（只會讀到願意分享的）
+  const { data: goalRows } = progress.length
+    ? await supabase
+        .from("fit_goals")
+        .select("id, user_id, title, share_with_group, created_by, achieved_at, archived_at, created_at")
+        .in(
+          "user_id",
+          progress.map((p) => p.user_id),
+        )
+        .eq("share_with_group", true)
+        .not("achieved_at", "is", null)
+        .is("archived_at", null)
+        .order("achieved_at", { ascending: false })
+        .limit(20)
+    : { data: [] as Goal[] };
+  type FeedItem = { kind: "checkin"; at: string; c: Checkin } | { kind: "goal"; at: string; g: Goal };
+  const feed: FeedItem[] = [
+    ...checkinFeed.map((c) => ({ kind: "checkin" as const, at: c.created_at, c })),
+    ...((goalRows ?? []) as Goal[]).map((g) => ({ kind: "goal" as const, at: g.achieved_at!, g })),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 40);
   const habits = new Map(((habitsRes.data ?? []) as Habit[]).map((h) => [h.id, h]));
-  const people = await profilesByIds(supabase, [group.coach_id, ...progress.map((p) => p.user_id), ...feed.map((f) => f.user_id)]);
+  const people = await profilesByIds(supabase, [group.coach_id, ...progress.map((p) => p.user_id), ...checkinFeed.map((f) => f.user_id)]);
   const coach = people.get(group.coach_id);
 
   return (
@@ -64,18 +86,49 @@ export default async function StudentGroupPage(props: PageProps<"/me/groups/[id]
       </Panel>
 
       <section>
-        <SectionTitle>大家的打卡</SectionTitle>
+        <SectionTitle>家族動態</SectionTitle>
         {feed.length === 0 ? (
           <p className="text-sm text-ink-3">還沒有人打卡，當第一個吧！</p>
         ) : (
           <ul className="space-y-3">
-            {feed.map((c) => {
+            {feed.map((item) => {
+              if (item.kind === "goal") {
+                const g = item.g;
+                const who = people.get(g.user_id);
+                const mine = g.user_id === user.id;
+                return (
+                  <li key={`g-${g.id}`} className="flex gap-3">
+                    <Avatar name={who?.display_name ?? "?"} id={g.user_id} size={34} />
+                    <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-lane-soft px-3.5 py-2.5">
+                      <p className="text-[0.9375rem] text-ink">
+                        <span aria-hidden>🎉 </span>
+                        <span className="font-medium">{mine ? "你" : who?.display_name}</span> 做到了生活目標
+                      </p>
+                      <p className="display mt-0.5 text-lg text-ink">「{g.title}」</p>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <p className="text-xs text-ink-3">{relativeLabel(g.achieved_at!)}</p>
+                        {mine ? null : (
+                          <QuickMessage
+                            kind="cheer"
+                            label="恭喜"
+                            recipientId={g.user_id}
+                            recipientName={who?.display_name ?? ""}
+                            groupId={id}
+                            presets={[`恭喜做到「${g.title}」！太厲害了 🎉`, "好棒！為你驕傲 👏", "繼續加油，下一個目標也一定可以 💪"]}
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                );
+              }
+              const c = item.c;
               const who = people.get(c.user_id);
               return (
                 <li key={c.id} className="flex gap-3">
                   <Avatar name={who?.display_name ?? "?"} id={c.user_id} size={34} />
                   <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm bg-surface px-3.5 py-2.5">
-                    <p className="text-[15px] text-ink">
+                    <p className="text-[0.9375rem] text-ink">
                       <span className="font-medium">{c.user_id === user.id ? "你" : who?.display_name}</span> 完成了「
                       {habits.get(c.habit_id)?.title ?? "作業"}」
                       {c.feeling ? <span className="ml-1">{feelingEmoji(c.feeling)}</span> : null}

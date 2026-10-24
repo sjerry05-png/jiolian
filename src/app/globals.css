@@ -92,8 +92,26 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: 16px;
+  font-size: 1rem;
   line-height: 1.6;
+}
+
+/*
+  長輩模式：整體放大到 19px（所有尺寸都用 rem，按鈕、間距一起變大），次要文字加深一點。
+  由 <html data-size="lg"> 控制，見 app/layout.tsx。
+*/
+html[data-size="lg"] {
+  font-size: 118.75%;
+}
+:root[data-size="lg"] {
+  --ink-2: #3a4660;
+  --ink-3: #56627a;
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-size="lg"] {
+    --ink-2: #c3cbdb;
+    --ink-3: #a4afc3;
+  }
 }
 
 /* 數字：窄體、等寬，像計分板 */

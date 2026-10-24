@@ -15,7 +15,7 @@ const VARIANT: Record<Variant, string> = {
 
 const SIZE: Record<Size, string> = {
   sm: "h-9 px-3 text-sm rounded-lg gap-1.5",
-  md: "h-11 px-4 text-[15px] rounded-xl gap-2",
+  md: "h-11 px-4 text-[0.9375rem] rounded-xl gap-2",
   lg: "h-14 px-6 text-base rounded-2xl gap-2",
 };
 
@@ -51,7 +51,7 @@ export function Label({ children, htmlFor, hint }: { children: ReactNode; htmlFo
 }
 
 const FIELD =
-  "w-full rounded-xl border border-line bg-surface px-3.5 text-[16px] text-ink placeholder:text-ink-3 focus:border-track focus:outline-none focus:ring-2 focus:ring-track/25";
+  "w-full rounded-xl border border-line bg-surface px-3.5 text-[1rem] text-ink placeholder:text-ink-3 focus:border-track focus:outline-none focus:ring-2 focus:ring-track/25";
 
 export function Input({ className = "", ...props }: ComponentProps<"input">) {
   return <input className={`${FIELD} h-12 ${className}`} {...props} />;
@@ -95,7 +95,7 @@ export function Avatar({ name, id, size = 36 }: { name: string; id: string; size
     <span
       aria-hidden
       className={`display inline-flex shrink-0 items-center justify-center rounded-full ${color}`}
-      style={{ width: size, height: size, fontSize: size * 0.46 }}
+      style={{ width: `${size / 16}rem`, height: `${size / 16}rem`, fontSize: `${(size * 0.46) / 16}rem` }}
     >
       {initial}
     </span>

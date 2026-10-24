@@ -27,7 +27,7 @@ export function InvitePanel({ group, url }: { group: Group; url: string }) {
       <p className="font-medium">邀請學員加入</p>
       <p className="mt-0.5 text-sm opacity-85">把連結傳到家人或朋友的 LINE 群組，點開就能加入。</p>
       <div className="mt-3 flex items-center gap-2 rounded-xl bg-white/12 px-3 py-2.5">
-        <span className="num min-w-0 flex-1 truncate text-[15px]">{url}</span>
+        <span className="num min-w-0 flex-1 truncate text-[0.9375rem]">{url}</span>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
         <button
@@ -41,7 +41,7 @@ export function InvitePanel({ group, url }: { group: Group; url: string }) {
               window.prompt("複製這段文字：", message);
             }
           }}
-          className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-[15px] font-medium text-track"
+          className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white px-4 text-[0.9375rem] font-medium text-track"
         >
           <Copy className="size-4" />
           {copied ? "已複製" : "複製邀請文字"}
@@ -50,7 +50,7 @@ export function InvitePanel({ group, url }: { group: Group; url: string }) {
           href={`https://line.me/R/share?text=${encodeURIComponent(message)}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex h-10 items-center rounded-xl bg-[#06c755] px-4 text-[15px] font-medium text-white"
+          className="inline-flex h-10 items-center rounded-xl bg-[#06c755] px-4 text-[0.9375rem] font-medium text-white"
         >
           用 LINE 傳送
         </a>
@@ -172,7 +172,7 @@ export function NewSessionForm({ group }: { group: Group }) {
           </Select>
         </div>
       </div>
-      <label className="flex items-start gap-2.5 text-[15px] text-ink">
+      <label className="flex items-start gap-2.5 text-[0.9375rem] text-ink">
         <input type="checkbox" checked={enrollAll} onChange={(e) => setEnrollAll(e.target.checked)} className="mt-1 size-4 accent-[var(--track)]" />
         <span>
           幫全團先報名

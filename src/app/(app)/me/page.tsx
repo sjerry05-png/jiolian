@@ -1,13 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Flame, Megaphone } from "lucide-react";
+import { ChevronRight, Flame, Megaphone } from "lucide-react";
 import { HabitRow } from "@/components/habit-row";
 import { SessionTicket } from "@/components/session-ticket";
 import { Empty, Panel, SectionTitle } from "@/components/ui";
+import { WellbeingCard } from "@/components/wellbeing";
 import { requireProfile } from "@/lib/auth";
 import { money, relativeLabel, todayInTaipei } from "@/lib/format";
-import { bookingsForSessions, profilesByIds, studentGroups, upcomingSessions } from "@/lib/queries";
-import type { Message, MySummary, TodayHabit } from "@/lib/types";
+import { GOAL_RERATE_DAYS } from "@/lib/fitness";
+import { bookingsForSessions, mondayOf, profilesByIds, studentGroups, upcomingSessions } from "@/lib/queries";
+import type { Goal, GoalRating, Message, MySummary, TodayHabit, Wellbeing } from "@/lib/types";
 
 export const metadata: Metadata = { title: "今天" };
 
@@ -22,7 +24,8 @@ export default async function StudentToday(props: PageProps<"/me">) {
   const sp = await props.searchParams;
   const { supabase, user, profile } = await requireProfile("student");
 
-  const [groups, summaryRes, todayRes, unreadRes] = await Promise.all([
+  const thisMonday = mondayOf(todayInTaipei());
+  const [groups, summaryRes, todayRes, unreadRes, wellRes, goalsRes, ratingsRes] = await Promise.all([
     studentGroups(supabase, user.id),
     supabase.rpc("fit_my_summary"),
     supabase.rpc("fit_my_today"),
@@ -33,7 +36,29 @@ export default async function StudentToday(props: PageProps<"/me">) {
       .is("read_at", null)
       .order("created_at", { ascending: false })
       .limit(3),
+    supabase
+      .from("fit_wellbeing")
+      .select("user_id, week_start, pain, pain_area, sleep, energy, note, updated_at")
+      .eq("user_id", user.id)
+      .eq("week_start", thisMonday)
+      .maybeSingle<Wellbeing>(),
+    supabase
+      .from("fit_goals")
+      .select("id, user_id, title, share_with_group, created_by, achieved_at, archived_at, created_at")
+      .eq("user_id", user.id)
+      .is("archived_at", null)
+      .is("achieved_at", null),
+    supabase.from("fit_goal_ratings").select("goal_id, rated_on").eq("user_id", user.id),
   ]);
+  const wellbeing = wellRes.data ?? null;
+  const lastRated = new Map<string, string>();
+  for (const r of (ratingsRes.data ?? []) as Pick<GoalRating, "goal_id" | "rated_on">[]) {
+    if ((lastRated.get(r.goal_id) ?? "") < r.rated_on) lastRated.set(r.goal_id, r.rated_on);
+  }
+  const dueGoals = ((goalsRes.data ?? []) as Goal[]).filter((g) => {
+    const last = lastRated.get(g.id);
+    return !last || (Date.parse(todayInTaipei()) - Date.parse(last)) / 86400_000 >= GOAL_RERATE_DAYS;
+  });
   const summary = (summaryRes.data ?? { streak: 0, week_target: 0, week_done: 0, unread: 0, unpaid: 0 }) as MySummary;
   const habits = (todayRes.data ?? []) as TodayHabit[];
   const unread = (unreadRes.data ?? []) as Message[];
@@ -162,6 +187,27 @@ export default async function StudentToday(props: PageProps<"/me">) {
             ))}
           </ul>
         )}
+      </section>
+
+      <section id="wellbeing" className="scroll-mt-20">
+        <SectionTitle>{wellbeing ? "這週身體感受" : "這週身體還好嗎？"}</SectionTitle>
+        {!wellbeing ? <p className="-mt-1 mb-3 text-sm text-ink-2">一週填一次，10 秒就好。教練會看到，上課時幫你調整。</p> : null}
+        <WellbeingCard current={wellbeing} />
+        {dueGoals.length > 0 ? (
+          <Link
+            href="/me/progress#goals"
+            className="mt-3 flex items-center gap-3 rounded-2xl bg-lane-soft px-4 py-3 text-ink hover:brightness-95"
+          >
+            <span className="text-2xl" aria-hidden>
+              🎯
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block font-medium">生活目標該重新打分數了</span>
+              <span className="block truncate text-sm text-ink-2">{dueGoals.map((g) => `「${g.title}」`).join("")}</span>
+            </span>
+            <ChevronRight className="size-5 shrink-0 text-ink-3" aria-hidden />
+          </Link>
+        ) : null}
       </section>
 
       <section>

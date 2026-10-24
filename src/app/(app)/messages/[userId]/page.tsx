@@ -18,7 +18,7 @@ export default async function Thread(props: PageProps<"/messages/[userId]">) {
   const { supabase, user, profile } = await requireProfile();
   const { data: other } = await supabase
     .from("fit_profiles")
-    .select("id, display_name, role, phone, bio")
+    .select("id, display_name, role, phone, bio, large_text")
     .eq("id", userId)
     .maybeSingle<Profile>();
   if (!other || other.id === user.id) notFound();
@@ -72,7 +72,7 @@ export default async function Thread(props: PageProps<"/messages/[userId]">) {
             <li key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
               <div className={`max-w-[80%] ${mine ? "items-end" : "items-start"} flex flex-col`}>
                 <div
-                  className={`rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed ${
+                  className={`rounded-2xl px-3.5 py-2.5 text-[0.9375rem] leading-relaxed ${
                     m.kind === "nudge"
                       ? "bg-lane text-lane-ink"
                       : mine
@@ -83,7 +83,7 @@ export default async function Thread(props: PageProps<"/messages/[userId]">) {
                   {tag ? <span className="mr-1.5 text-xs font-bold">【{tag}】</span> : null}
                   {m.body}
                 </div>
-                <span className="mt-1 text-[11px] text-ink-3">
+                <span className="mt-1 text-[0.6875rem] text-ink-3">
                   {dateTimeLabel(m.created_at)}
                   {mine && m.read_at ? "・已讀" : ""}
                 </span>

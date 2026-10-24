@@ -32,6 +32,11 @@ function partsInTaipei(d: Date) {
   };
 }
 
+/** n 天前的時間點（ISO） */
+export function isoDaysAgo(days: number): string {
+  return new Date(Date.now() - days * 86400_000).toISOString();
+}
+
 /** n 天前（台灣日期，YYYY-MM-DD） */
 export function taipeiDateDaysAgo(days: number): string {
   return todayInTaipei(new Date(Date.now() - days * 86400_000));

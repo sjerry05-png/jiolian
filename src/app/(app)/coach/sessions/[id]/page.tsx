@@ -40,7 +40,7 @@ export default async function CoachSessionPage(props: PageProps<"/coach/sessions
           {session.group_name}
         </Link>
         <h1 className="display mt-0.5 text-3xl text-ink">{dateTimeLabel(session.starts_at)}</h1>
-        <div className="mt-2 space-y-1 text-[15px] text-ink-2">
+        <div className="mt-2 space-y-1 text-[0.9375rem] text-ink-2">
           {session.title ? <p className="font-medium text-ink">{session.title}</p> : null}
           <p className="flex items-center gap-1.5">
             <MapPin className="size-4" aria-hidden />

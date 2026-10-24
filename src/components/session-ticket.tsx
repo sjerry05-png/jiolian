@@ -41,7 +41,7 @@ export function SessionTicket({
         <div className="flex w-20 shrink-0 flex-col items-center justify-center bg-track px-2 py-3 text-track-ink">
           <span className="text-xs opacity-80">{dayLabel(session.starts_at)}</span>
           <span className="num text-2xl font-bold leading-tight">{timeLabel(session.starts_at)}</span>
-          <span className="text-[11px] opacity-80">{session.duration_min} 分鐘</span>
+          <span className="text-[0.6875rem] opacity-80">{session.duration_min} 分鐘</span>
         </div>
         <div className="min-w-0 flex-1 px-4 py-3">
           <p className="font-medium text-ink">

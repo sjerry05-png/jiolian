@@ -29,7 +29,7 @@ export function LaneBoard({
             <Avatar name={m.display_name} id={m.user_id} size={32} />
             <div className="min-w-0 flex-1">
               <div className="flex items-baseline justify-between gap-2">
-                <span className={`truncate text-[15px] ${isMe ? "font-bold text-track" : "text-ink"}`}>
+                <span className={`truncate text-[0.9375rem] ${isMe ? "font-bold text-track" : "text-ink"}`}>
                   {m.display_name}
                   {isMe ? "（你）" : ""}
                 </span>

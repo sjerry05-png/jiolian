@@ -4,8 +4,11 @@
 // 成功後 refresh() 讓畫面重新抓資料。
 
 import { refresh } from "next/cache";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { homePathFor } from "@/lib/auth";
+import { SIZE_COOKIE } from "@/lib/config";
+import type { TestKey } from "@/lib/fitness";
 import { callRpc } from "@/lib/rpc";
 import type { ActionResult, BookingStatus, LocationType, MessageKind, PaidMethod, Role } from "@/lib/types";
 
@@ -21,9 +24,18 @@ function safeNext(next: string | null | undefined): string | null {
 }
 
 // ── 個人資料 ──
-export async function setupProfile(displayName: string, role: Role, next: string | null): Promise<ActionResult> {
+export async function setupProfile(
+  displayName: string,
+  role: Role,
+  next: string | null,
+  largeText = false,
+): Promise<ActionResult> {
   const r = await callRpc("fit_setup_profile", { p_display_name: displayName, p_role: role });
   if (!r.ok) return r;
+  if (largeText) {
+    const lt = await setLargeText(true);
+    if (!lt.ok) return lt;
+  }
   redirect(safeNext(next) ?? (role === "coach" ? "/coach/groups/new" : homePathFor(role)));
 }
 
@@ -234,4 +246,87 @@ export async function sendMessage(recipientId: string, body: string, kind: Messa
 
 export async function markRead(senderId: string | null) {
   return run<number>("fit_mark_read", { p_sender_id: senderId });
+}
+
+// ── 中高齡：長輩模式、基本資料、體能小考、生活目標、每週感受 ──
+
+export async function setLargeText(on: boolean): Promise<ActionResult> {
+  const r = await callRpc("fit_set_large_text", { p_on: on });
+  if (!r.ok) return r;
+  const jar = await cookies();
+  // 字級要在 <html> 上設定，伺服器渲染時就要知道，所以同時記在 cookie
+  if (on) jar.set(SIZE_COOKIE, "lg", { path: "/", maxAge: 60 * 60 * 24 * 400, sameSite: "lax" });
+  else jar.delete(SIZE_COOKIE);
+  refresh();
+  return { ok: true, data: undefined };
+}
+
+export async function setBodyInfo(userId: string | null, birthYear: number | null, sex: "male" | "female" | null) {
+  return run("fit_set_body_info", { p_user_id: userId, p_birth_year: birthYear, p_sex: sex });
+}
+
+export interface AssessmentInput {
+  userId: string | null;
+  measuredOn: string;
+  screenAnswers: boolean[];
+  doctorOk: boolean;
+  values: Partial<Record<TestKey, number | null>>;
+  bpSys: number | null;
+  bpDia: number | null;
+  hrRest: number | null;
+  note: string;
+  returnTo: string;
+}
+
+export async function saveAssessment(input: AssessmentInput): Promise<ActionResult> {
+  const v = input.values;
+  const r = await callRpc<string>("fit_save_assessment", {
+    p_user_id: input.userId,
+    p_measured_on: input.measuredOn,
+    p_screen_answers: input.screenAnswers,
+    p_doctor_ok: input.doctorOk,
+    p_chair_stand: v.chair_stand ?? null,
+    p_arm_curl: v.arm_curl ?? null,
+    p_step_2min: v.step_2min ?? null,
+    p_sit_reach: v.sit_reach ?? null,
+    p_back_scratch: v.back_scratch ?? null,
+    p_up_and_go: v.up_and_go ?? null,
+    p_grip: v.grip ?? null,
+    p_single_leg: v.single_leg ?? null,
+    p_bp_sys: input.bpSys,
+    p_bp_dia: input.bpDia,
+    p_hr_rest: input.hrRest,
+    p_note: input.note,
+  });
+  if (!r.ok) return r;
+  const back = safeNext(input.returnTo) ?? "/me/progress";
+  redirect(`${back}${back.includes("?") ? "&" : "?"}assessed=${r.data}#fitness`);
+}
+
+export async function deleteAssessment(assessmentId: string) {
+  return run("fit_delete_assessment", { p_assessment_id: assessmentId });
+}
+
+export async function addGoal(userId: string | null, title: string, score: number, share: boolean) {
+  return run<string>("fit_add_goal", { p_user_id: userId, p_title: title, p_score: score, p_share: share });
+}
+
+export async function rateGoal(goalId: string, score: number) {
+  return run("fit_rate_goal", { p_goal_id: goalId, p_score: score });
+}
+
+export async function setGoalAchieved(goalId: string, achieved: boolean) {
+  return run("fit_set_goal_achieved", { p_goal_id: goalId, p_achieved: achieved });
+}
+
+export async function updateGoal(goalId: string, title: string, share: boolean) {
+  return run("fit_update_goal", { p_goal_id: goalId, p_title: title, p_share: share });
+}
+
+export async function archiveGoal(goalId: string) {
+  return run("fit_archive_goal", { p_goal_id: goalId });
+}
+
+export async function saveWellbeing(pain: number, sleep: number, energy: number, painArea: string, note: string) {
+  return run("fit_save_wellbeing", { p_pain: pain, p_sleep: sleep, p_energy: energy, p_pain_area: painArea, p_note: note });
 }

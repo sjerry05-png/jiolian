@@ -36,7 +36,7 @@ export function PriceStairs({
         return (
           <div key={n} className="flex min-w-0 flex-1 flex-col items-center">
             <span
-              className={`num mb-1 whitespace-nowrap leading-none ${compact ? "text-[13px]" : "text-[15px] sm:text-lg"} ${
+              className={`num mb-1 whitespace-nowrap leading-none ${compact ? "text-[0.8125rem]" : "text-[0.9375rem] sm:text-lg"} ${
                 isCurrent ? "font-bold text-track" : isNext ? "font-bold text-ink" : "text-ink-3"
               }`}
             >
@@ -60,7 +60,7 @@ export function PriceStairs({
               {isNext && current >= 1 ? "再1人" : `${n}人`}
             </span>
             {showCoachTotal ? (
-              <span className="num mt-0.5 whitespace-nowrap text-[11px] text-ink-3">{money(price * n)}</span>
+              <span className="num mt-0.5 whitespace-nowrap text-[0.6875rem] text-ink-3">{money(price * n)}</span>
             ) : null}
           </div>
         );

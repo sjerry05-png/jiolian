@@ -55,7 +55,7 @@ export function RosterRow({
           </label>
           <Select
             id={`st-${userId}`}
-            className="h-10 w-32 text-[15px]"
+            className="h-10 w-32 text-[0.9375rem]"
             value={booking && statuses.includes(booking.status) ? booking.status : ""}
             disabled={pending || lockedAttendance}
             onChange={(e) => run(() => setAttendance(session.id, userId, e.target.value as BookingStatus))}
@@ -99,7 +99,7 @@ export function RosterRow({
               </label>
               <Select
                 id={`pay-${userId}`}
-                className={`h-10 w-32 text-[15px] ${booking.paid_at ? "border-go text-go" : "border-stop/50 text-stop"}`}
+                className={`h-10 w-32 text-[0.9375rem] ${booking.paid_at ? "border-go text-go" : "border-stop/50 text-stop"}`}
                 value={booking.paid_method ?? ""}
                 disabled={pending}
                 onChange={(e) => run(() => setPayment(session.id, userId, (e.target.value || null) as PaidMethod | null))}

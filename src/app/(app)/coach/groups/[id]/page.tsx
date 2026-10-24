@@ -59,7 +59,7 @@ export default async function CoachGroupPage(props: PageProps<"/coach/groups/[id
             key={t.key}
             href={`/coach/groups/${id}?tab=${t.key}`}
             aria-current={tab === t.key ? "page" : undefined}
-            className={`shrink-0 rounded-full px-4 py-2 text-[15px] ${
+            className={`shrink-0 rounded-full px-4 py-2 text-[0.9375rem] ${
               tab === t.key ? "bg-ink text-surface" : "text-ink-2 hover:bg-surface"
             }`}
           >
@@ -113,7 +113,7 @@ function MembersTab({ groupId, progress, invite }: { groupId: string; progress: 
                     <QuickMessage kind="cheer" recipientId={m.user_id} recipientName={m.display_name} groupId={groupId} />
                   )}
                 </div>
-                <dl className="mt-2.5 ml-[62px] grid grid-cols-4 gap-2 text-center">
+                <dl className="mt-2.5 ml-[3.875rem] grid grid-cols-4 gap-2 text-center">
                   <Stat label="本週" value={m.week_target ? `${m.week_done}/${m.week_target}` : "—"} />
                   <Stat
                     label="連續"
@@ -127,7 +127,7 @@ function MembersTab({ groupId, progress, invite }: { groupId: string; progress: 
                   <Stat label="30 天出席" value={m.counted_30d ? `${m.attended_30d}/${m.counted_30d}` : "—"} />
                   <Stat label="未收" value={m.unpaid_amount ? money(m.unpaid_amount) : "—"} warn={!!m.unpaid_amount} />
                 </dl>
-                <div className="mt-1 ml-[62px] text-right">
+                <div className="mt-1 ml-[3.875rem] text-right">
                   <RemoveMemberButton groupId={groupId} userId={m.user_id} name={m.display_name} />
                 </div>
               </li>
@@ -143,8 +143,8 @@ function MembersTab({ groupId, progress, invite }: { groupId: string; progress: 
 function Stat({ label, value, warn = false }: { label: string; value: React.ReactNode; warn?: boolean }) {
   return (
     <div className="rounded-lg bg-surface-2 px-1 py-1.5">
-      <dt className="text-[11px] text-ink-3">{label}</dt>
-      <dd className={`num text-[15px] font-bold ${warn ? "text-stop" : "text-ink"}`}>{value}</dd>
+      <dt className="text-[0.6875rem] text-ink-3">{label}</dt>
+      <dd className={`num text-[0.9375rem] font-bold ${warn ? "text-stop" : "text-ink"}`}>{value}</dd>
     </div>
   );
 }

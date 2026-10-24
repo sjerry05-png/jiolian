@@ -93,7 +93,7 @@ export function GroupForm({ group }: { group?: Group }) {
               type="button"
               aria-pressed={locationType === l}
               onClick={() => setLocationType(l)}
-              className={`rounded-full px-4 py-2 text-[15px] ${
+              className={`rounded-full px-4 py-2 text-[0.9375rem] ${
                 locationType === l ? "bg-track text-track-ink" : "bg-surface text-ink-2 ring-1 ring-line hover:ring-track"
               }`}
             >
@@ -177,7 +177,7 @@ export function GroupForm({ group }: { group?: Group }) {
           <p className="mt-2 text-center text-xs text-ink-3">每欄最下面的數字是你這堂的總收入</p>
         </div>
 
-        <table className="mt-5 w-full text-[15px]">
+        <table className="mt-5 w-full text-[0.9375rem]">
           <thead>
             <tr className="text-left text-sm text-ink-3">
               <th className="pb-2 font-normal">人數</th>
@@ -201,7 +201,7 @@ export function GroupForm({ group }: { group?: Group }) {
                       const v = Number(e.target.value.replace(/\D/g, ""));
                       setLadder((cur) => cur.map((x, j) => (j === i ? v : x)));
                     }}
-                    className="num h-10 w-28 rounded-lg border border-line bg-surface-2 px-2.5 text-[16px] focus:border-track focus:outline-none"
+                    className="num h-10 w-28 rounded-lg border border-line bg-surface-2 px-2.5 text-[1rem] focus:border-track focus:outline-none"
                   />
                 </td>
                 <td className="num py-1.5 text-right text-ink">{money((Number.isFinite(p) ? p : 0) * (i + 1))}</td>

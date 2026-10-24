@@ -37,9 +37,9 @@ export function CheckinCalendar({
   return (
     <figure>
       <div className="flex gap-1.5">
-        <div className="flex flex-col gap-1.5 pr-1 text-[10px] leading-[14px] text-ink-3" aria-hidden>
+        <div className="flex flex-col gap-1.5 pr-1 text-[0.625rem] leading-[0.875rem] text-ink-3" aria-hidden>
           {["一", "", "三", "", "五", "", "日"].map((l, i) => (
-            <span key={i} className="h-[14px] sm:h-[18px] sm:leading-[18px]">
+            <span key={i} className="h-[0.875rem] sm:h-[1.125rem] sm:leading-[1.125rem]">
               {l}
             </span>
           ))}
@@ -50,7 +50,7 @@ export function CheckinCalendar({
               <span
                 key={cell.day}
                 title={cell.future ? undefined : `${plainDateLabel(cell.day)}：${cell.count > 0 ? `打卡 ${cell.count} 次` : "沒打卡"}`}
-                className={`block h-[14px] rounded-[3px] sm:h-[18px] ${cell.future ? "opacity-0" : LEVEL_CLASS[level(cell.count)]} ${
+                className={`block h-[0.875rem] rounded-[3px] sm:h-[1.125rem] ${cell.future ? "opacity-0" : LEVEL_CLASS[level(cell.count)]} ${
                   cell.day === today ? "outline-2 outline-offset-1 outline-lane" : ""
                 }`}
               />

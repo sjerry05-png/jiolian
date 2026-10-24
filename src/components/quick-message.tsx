@@ -19,15 +19,19 @@ export function QuickMessage({
   groupId,
   kind,
   label,
+  presets,
 }: {
   recipientId: string;
   recipientName: string;
   groupId: string | null;
   kind: "nudge" | "cheer";
   label?: string;
+  /** 覆蓋預設的常用句（例如恭喜達成生活目標） */
+  presets?: string[];
 }) {
+  const options = presets ?? PRESETS[kind];
   const [open, setOpen] = useState(false);
-  const [body, setBody] = useState(PRESETS[kind][0]);
+  const [body, setBody] = useState(options[0]);
   const [sent, setSent] = useState(false);
   const { pending, error, run } = useAction();
 
@@ -59,7 +63,7 @@ export function QuickMessage({
         {kind === "nudge" ? "督促" : "幫"} {recipientName} {kind === "nudge" ? "" : "加油"}
       </p>
       <div className="flex flex-wrap gap-2">
-        {PRESETS[kind].map((p) => (
+        {options.map((p) => (
           <button
             key={p}
             type="button"
