@@ -47,15 +47,27 @@
 | `20261014000003_jiolian_rpcs_tracking.sql` | 作業、打卡、身體數據、訊息、追蹤統計、函式權限 |
 | `20261014000004_jiolian_rpcs_deletes.sql` | 取消打卡、刪除身體數據（含 DELETE，獨立成一個檔） |
 | `20261018000005_jiolian_session_started.sql` | 課程總覽加上 `has_started` |
+| `20261023000006_jiolian_signup_gate.sql` | 註冊限流（全站每小時 60、同 IP 每小時 8） |
+
+Edge Function：`supabase/functions/jiolian-signup`（部署時 `verify_jwt = false`）。註冊時由伺服器呼叫，直接建立已驗證的 Email 帳號，不寄驗證信。
 
 規則測試：`supabase/tests/fit_rules_test.sql`（本機 Postgres 搭配 `supabase/tests/local_auth_stub.sql` 執行，75 項全部通過）。
 
-## Supabase 登入設定
+## 登入設定
 
-1. Authentication → Sign In / Providers → Email：關閉「Confirm email」（內建寄信服務只寄給專案成員）
-2. Authentication → Sign In / Providers → Google：填入 Google Cloud 的 OAuth Client ID / Secret
-   - Google Cloud 的「已授權的重新導向 URI」：`https://xtxncpbhmjildahfontt.supabase.co/auth/v1/callback`
-3. Authentication → URL Configuration → Redirect URLs：加入 `https://jiolian.vercel.app/**`
+**Email 註冊不用另外設定。** 註冊走 Edge Function `jiolian-signup` 直接建立帳號，所以不必關掉 Supabase 的「Confirm email」（同專案的 TCB Bloom Together 不受影響）。
+
+限制：Supabase 內建寄信服務只寄給專案成員，所以「忘記密碼」信寄不到一般使用者；要開放的話，到 Authentication → Emails → SMTP Settings 接自己的寄信服務（例如 Resend）。
+
+**Google 登入（選用）**：登入頁會自動偵測，Supabase 開通後 5 分鐘內按鈕就會出現。
+1. Google Cloud Console → APIs & Services → Credentials → 建立 OAuth 用戶端 ID（網頁應用程式）
+   - 已授權的重新導向 URI：`https://xtxncpbhmjildahfontt.supabase.co/auth/v1/callback`
+2. Supabase → Authentication → Sign In / Providers → Google：填入 Client ID / Secret，開啟
+3. Supabase → Authentication → URL Configuration → Redirect URLs：加入 `https://jiolian.vercel.app/**`
+
+## 部署
+
+Vercel 團隊 `bkc` 的 `jiolian` 專案，函式在新加坡（sin1），正式網址 https://jiolian.vercel.app 。
 
 ## 本機開發
 
@@ -68,4 +80,7 @@ npm run dev
 
 ## 端對端測試
 
-見 `e2e/README.md`。
+- 正式網站冒煙測試（全新帳號從註冊走到打卡，不需要示範帳號）：
+  `E2E_BASE_URL=https://jiolian.vercel.app E2E_PASSWORD=x npx playwright test e2e/z-prod-smoke.spec.ts`
+  測完用 SQL 清掉：`delete from auth.users where email like 'smoke-%@test.jiolian.app';`
+- 完整流程（示範帳號）見 `e2e/README.md`。
